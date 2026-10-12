@@ -1,0 +1,27 @@
+name: TIE Lote Monitor
+
+on:
+  schedule:
+    # Runs at 9:00 AM and 2:00 PM local time (8:00 and 13:00 UTC)
+    - cron: '0 8,13 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-monitor:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - run: |
+          pip install playwright httpx beautifulsoup4
+          playwright install chromium
+      - run: python monitor.py
+      - run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add last_lote.txt
+          git diff --staged --quiet || (git commit -m "Update last seen lote" && git push)
